@@ -4,14 +4,23 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from configparser import SafeConfigParser
-from datetime import datetime, timedelta
+from datetime import datetime as dt
+from datetime import timedelta
+import datetime
 #used for debugging
 import time
 
 link = None
-target_date = datetime.now().date() + timedelta(days=2)
+target_date = dt.now().date() + timedelta(days=2)
 target_formatted = target_date.strftime("%m/%d/%Y")
-
+hour = dt.now().hour
+minutes = dt.now().minute
+if minutes <= 29:
+    minutes = 00
+else:
+    minutes = 30
+target_time = datetime.time(hour, minutes)
+time_formatted = target_time.strftime("%#I:%M%p")
 
 # create instance of webdriver and navigate to the correct page
 driver = Chrome()
@@ -20,7 +29,7 @@ driver.get("https://www.ymcatriangle.org/northwest-cary-ymca-fitness-pool-gym-sc
 # locate and select desired category
 select = Select(driver.find_element_by_id('categoriesGXP'))
 select.select_by_visible_text('Pool Schedule')
-# get list of pool items for only the date I'm interested in - refactor for flexibility. Can take awhile to load, so wait until elements exist to grab them
+# get list of pool items for only the date I'm interested in. Can take awhile to load, so wait until elements exist to grab them
 wait = WebDriverWait(driver, 10)
 item_list = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'a[data-date=' + "'" +  target_formatted + "'" + ']')))
 for item in item_list:
@@ -31,7 +40,8 @@ for item in item_list:
     # get the child of this element that lists the time slot
     time_slot = grandparent_element.find_element_by_class_name("GXPTime")
     # check to see if the time slot is the one we want, if it is, grab href and break out of loop
-    if time_slot.text == "4:00PM-4:30PM":
+    slot_split = time_slot.text.split("-")
+    if slot_split[0] == time_formatted:
         link_elem = item.find_element_by_xpath("./following-sibling::a[1]")
         link = link_elem.get_attribute('href')
         break
