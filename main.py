@@ -4,10 +4,14 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from configparser import SafeConfigParser
+from datetime import datetime, timedelta
 #used for debugging
 import time
 
 link = None
+target_date = datetime.now().date() + timedelta(days=2)
+target_formatted = target_date.strftime("%m/%d/%Y")
+
 
 # create instance of webdriver and navigate to the correct page
 driver = Chrome()
@@ -18,7 +22,7 @@ select = Select(driver.find_element_by_id('categoriesGXP'))
 select.select_by_visible_text('Pool Schedule')
 # get list of pool items for only the date I'm interested in - refactor for flexibility. Can take awhile to load, so wait until elements exist to grab them
 wait = WebDriverWait(driver, 10)
-item_list = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a[data-date='11/07/2021']")))
+item_list = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'a[data-date=' + "'" +  target_formatted + "'" + ']')))
 for item in item_list:
     # grab the parent
     parent_element = item.find_element_by_xpath("./..")
